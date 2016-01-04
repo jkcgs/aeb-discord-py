@@ -87,7 +87,7 @@ if login['email'] == "" or login['password'] == "":
 print("iniciando...")
 
 client = discord.Client()
-client.login(login['email'], login.password)
+client.login(login['email'], login['password'])
 
 tig_last = time.time() - 10
 tig_timeout = 10
