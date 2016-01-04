@@ -2,9 +2,18 @@
 # -*- encoding: utf-8 -*-
 from __future__ import print_function
 import discord, random, os, sys, time, json
+from urllib2 import urlopen
 
 def m(client, message, what):
     client.send_message(message.channel, message.author.mention() + ' ' + what)
+
+# USD https://currency-api.appspot.com/api/usd/clp.json
+usd_conv = False
+try:
+     res = urlopen("https://currency-api.appspot.com/api/usd/clp.json")
+     usd_conv = json.loads(res.read())
+except OSError as e:
+    print("error al cargar datos de conversión de divisas")
 
 man_meme = "es por ej: 'nombre url', como 'genial meme http://www.google.com' o 'xd http://xd.com' donde el ultimo elemento separado por espacios es el meme"
 login_file = "login.json"
@@ -201,13 +210,13 @@ def on_message(message):
             else:
                 m(client, message, 'sello')
 
-        if msg == '!quiensoy':
+        elif msg == '!quiensoy':
             m(client, message, 'pa k kieres saber eso jaja saludos')
 
-        if msg == '!quieneres':
+        elif msg == '!quieneres':
             m(client, message, 'soy el guason XD')
 
-        if msg == '!thisisgospel':
+        elif msg == '!thisisgospel':
             rem_dif = int(tig_timeout - (time.time() - tig_last))
             if rem_dif <= 0:
                 client.send_message(message.channel, tig)
@@ -215,16 +224,24 @@ def on_message(message):
             else:
                 m(client, message, 'intenta de nuevo en unos ' + str(rem_dif) + ' seg y te la canto de nuevo')
 
-        if msg == '!xd':
+        elif (msg.startswith("!usd ") or msg == "!usd") and usd_conv:
+            rate = 1
+            if msg != "!usd":
+                try: rate = float(msg.split(" ")[1])
+                except: pass
+
+            client.send_message(message.channel, str(rate) + " usd = " + str(int(usd_conv["rate"] * rate)))
+
+        elif msg == '!xd':
             m(client, message, random.choice(xd))
 
-        if msg == 'que buen bot':
+        elif msg == 'que buen bot':
             m(client, message, 'gracias bro a tu servisio jeje')
 
-        if msg == '!memes' and not is_master:
+        elif msg == '!memes' and not is_master:
             client.send_message(message.channel, 'tengo ' + str(len(memes)) + (' memes' if len(memes) != 1 else ' meme'))
 
-        if msg.startswith("!meme ") or msg == "!meme":
+        elif msg.startswith("!meme ") or msg == "!meme":
             if len(memes) == 0:
                 m(client, message, 'no hay stock de memes ahora')
                 return
@@ -240,6 +257,8 @@ def on_message(message):
                 client.send_message(message.channel, memes[meme].strip())
             else:
                 m(client, message, 'sorry m4n no tengo ese miim')
+        elif msg.startswith("!") and msg[1:] in memes:
+            client.send_message(message.channel, memes[msg[1:]].strip())
 
 @client.event
 def on_ready():
