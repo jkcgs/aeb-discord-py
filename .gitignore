@@ -1,4 +1,6 @@
-login.json
+config.json
 masters.json
 memes.json
 xd.txt
+*.pyc
+
