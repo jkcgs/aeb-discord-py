@@ -12,11 +12,16 @@ gf_last_error = False
 
 # USD https://currency-api.appspot.com/api/usd/clp.json
 usd_conv = False
-try:
-     res = urlopen("https://currency-api.appspot.com/api/usd/clp.json")
-     usd_conv = json.loads(res.read())
-except OSError as e:
-    print("error al cargar datos de conversión de divisas")
+usd_conv_last = time.time()
+usd_timeout = 300 # 5 mins
+
+def usd_load():
+    try:
+        global usd_conv
+        res = urlopen("https://currency-api.appspot.com/api/usd/clp.json")
+        usd_conv = json.loads(res.read())
+    except OSError as e:
+        print("error al cargar datos de conversión de divisas")
 
 man_meme = "es por ej: 'nombre url', como 'genial meme http://www.google.com' o 'xd http://xd.com' donde el ultimo elemento separado por espacios es el meme"
 config_file = "config.json"
@@ -269,11 +274,19 @@ def on_message(message):
                 else:
                     m(client, message, 'intenta de nuevo en unos ' + str(rem_dif) + ' seg y te la canto de nuevo')
 
-            elif (msg.startswith("!usd ") or msg == "!usd") and usd_conv:
+            elif (msg.startswith("!usd ") or msg == "!usd"):
+                if not usd_conv:
+                    client.send_message(message.channel, "La conversión usd-clp no está activa")
+                    return
+
                 rate = 1
                 if msg != "!usd":
                     try: rate = float(msg.split(" ")[1])
                     except: pass
+
+                if time.time() - usd_conv_last > usd_timeout:
+                    print("actualizando conversión usd...")
+                    usd_load()
 
                 client.send_message(message.channel, str(rate) + " usd = " + str(int(usd_conv["rate"] * rate)))
 
